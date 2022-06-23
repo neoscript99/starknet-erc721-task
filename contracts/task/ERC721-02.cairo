@@ -1,7 +1,15 @@
 %lang starknet
 
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
-from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.uint256 import (
+    Uint256,
+    uint256_add,
+    uint256_sub,
+    uint256_le,
+    uint256_lt,
+    uint256_check,
+    uint256_eq,
+)
 
 from openzeppelin.token.erc721.library import (
     ERC721_name,
@@ -118,7 +126,8 @@ func safeTransferFrom{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_ch
     return ()
 end
 
-@view
-func get_animal_characteristics(token_id : Uint256) -> (sex : felt, legs : felt, wings : felt):
-    return (81, 8, 1)
+
+@external
+func declare_animal(sex : felt, legs : felt, wings : felt) -> (token_id : Uint256):
+    return (Uint256(100,0))
 end
