@@ -19,8 +19,8 @@ end
 func get_animal_characteristics{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
     token_id : Uint256) -> (sex : felt, legs : felt, wings : felt):
     alloc_locals
-    local ani = animal_of_token.read(token_id)
-    return (ani.sex, ani.legs, ani.wings)
+    let (animal) = animal_of_token.read(token_id)
+    return (animal.sex, animal.legs, animal.wings)
 end
 
 @view
@@ -36,15 +36,18 @@ end
 func register_me_as_breeder() -> (is_added : felt):
     return (1)
 end
-@external
-func declare_animal(sex : felt, legs : felt, wings : felt) -> (token_id : Uint256):
-    return (Uint256(100,0))
+
+func declare_animal_internal{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    token_id : Uint256, sex : felt, legs : felt, wings : felt) -> (newAnimal : Animal):
+    let newAnimal = Animal(sex=sex, legs=legs, wings=wings)
+    animal_of_token.write(token_id, newAnimal)
+    return (newAnimal)
 end
+
 @view
 func token_of_owner_by_index(account : felt, index : felt) -> (token_id : Uint256):
     return (Uint256(100,0))
 end
-@external
-func declare_dead_animal(token_id : Uint256):
+func declare_dead_animal_internal(token_id : Uint256):
     return ()
 end

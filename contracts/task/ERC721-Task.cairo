@@ -1,5 +1,6 @@
 %lang starknet
 
+from starkware.starknet.common.syscalls import get_contract_address, get_caller_address
 from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
 from starkware.cairo.common.uint256 import (
     Uint256,
@@ -27,6 +28,15 @@ from openzeppelin.token.erc721.library import (
     ERC721_safeTransferFrom,
 )
 
+from contracts.task.ExeSolutionBase import(
+    get_animal_characteristics,
+    is_breeder,
+    registration_price,
+    register_me_as_breeder,
+    token_of_owner_by_index,
+    declare_animal_internal,
+    declare_dead_animal_internal
+)
 #
 # Constructor
 #
@@ -39,9 +49,13 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     let to = to_
     let token_id : Uint256 = Uint256(1, 0)
     ERC721_mint(to, token_id)
+    cur_token_id.write(token_id)
     return ()
 end
 
+@storage_var
+func cur_token_id() -> (token_id: Uint256):
+end
 #
 # Getters
 #
@@ -126,8 +140,22 @@ func safeTransferFrom{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_ch
     return ()
 end
 
+########################IExerciceSolution###############################
+@external
+func declare_animal{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    sex : felt, legs : felt, wings : felt) -> (token_id : Uint256):
+    alloc_locals
+    # Reading caller address
+    let (sender_address) = get_caller_address()
+    let (token_id) = cur_token_id.read()
+    let (next_token_id, _) = uint256_add(token_id, Uint256(1,0))
+    declare_animal_internal(next_token_id,sex,legs,wings)
+    ERC721_mint(sender_address, next_token_id)
+    return (next_token_id)
+end
 
 @external
-func declare_animal(sex : felt, legs : felt, wings : felt) -> (token_id : Uint256):
-    return (Uint256(100,0))
+func declare_dead_animal{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(token_id : Uint256):
+    ERC721_burn(token_id)
+    return ()
 end
