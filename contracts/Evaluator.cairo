@@ -401,7 +401,7 @@ func ex4_declare_dead_animal{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, r
     end
 end
 
-# For ex5 you need ERC20 tokens. Go get them
+#For ex5 you need ERC20 tokens. Go get them
 @external
 func ex5a_i_have_dtk{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     alloc_locals

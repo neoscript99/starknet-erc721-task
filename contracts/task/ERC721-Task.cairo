@@ -30,6 +30,17 @@ from contracts.task.ExeSolutionBase import (
     cur_token_id,
     Solution_mint,
 )
+
+from contracts.token.ERC20.IERC20 import IERC20
+from contracts.token.ERC721.IERC721 import IERC721
+from contracts.token.ERC20.IFaucet import IFaucet
+@storage_var
+func dummy_token_address_storage() -> (dummy_token_address_storage : felt):
+end
+
+@storage_var
+func dummy_metadata_erc721_storage() -> (dummy_metadata_erc721_storage : felt):
+end
 #
 # Constructor
 #
@@ -41,6 +52,14 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     ERC721_initializer(name, symbol)
     let (token_id) = Solution_mint(to_)
     cur_token_id.write(token_id)
+    let dummy_token_address = 0x07ff0a898530b169c5fe6fed9b397a7bbd402973ce2f543965f99d6d4a4c17b8
+    dummy_token_address_storage.write(dummy_token_address)
+    dummy_metadata_erc721_storage.write(
+        0x02e24bd7683c01cb2e4e48148e254f2a0d44ee526cff3c703d6031a685f1700d
+    )
+    with_attr error_message("Couldn't faucet dummy token"):
+        IFaucet.faucet(contract_address=dummy_token_address)
+    end
     return ()
 end
 
