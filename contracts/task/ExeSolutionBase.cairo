@@ -3,8 +3,9 @@
 from starkware.cairo.common.cairo_builtins import HashBuiltin, BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256, uint256_add, uint256_sub, uint256_eq
 
-from starkware.starknet.common.syscalls import get_caller_address
+from starkware.starknet.common.syscalls import get_caller_address, get_contract_address
 
+from contracts.token.ERC20.IERC20 import IERC20
 from openzeppelin.token.erc721.library import (
     ERC721_mint,
     ERC721_burn,
@@ -30,6 +31,20 @@ end
 @storage_var
 func cur_token_id() -> (token_id : Uint256):
 end
+@storage_var
+func breeders(account : felt) -> (approved : felt):
+end
+
+@storage_var
+func dummy_token_address_storage() -> (dummy_token_address_storage : felt):
+end
+
+func Solution_init{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    dummy_token_address : felt
+):
+    dummy_token_address_storage.write(dummy_token_address)
+    return ()
+end
 
 @view
 func get_animal_characteristics{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
@@ -41,16 +56,35 @@ func get_animal_characteristics{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*
 end
 
 @view
-func is_breeder(account : felt) -> (is_approved : felt):
-    return (1)
+func is_breeder{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+    account : felt
+) -> (is_approved : felt):
+    let (is_approved) = breeders.read(account)
+    return (is_approved)
 end
 @view
 func registration_price() -> (price : Uint256):
-    return (Uint256(100, 0))
+    return (Uint256(1 * 1000000000000000000, 0))
 end
 
 @external
-func register_me_as_breeder() -> (is_added : felt):
+func register_me_as_breeder{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_check_ptr}(
+    ) -> (is_added : felt):
+    alloc_locals
+    let (local sender_address) = get_caller_address()
+    let (local solution_address) = get_contract_address()
+    let (local price) = registration_price()
+
+    let (dummy_token_address) = dummy_token_address_storage.read()
+    with_attr error_message("net enough dummy token for registration price"):
+        IERC20.transferFrom(
+            contract_address=dummy_token_address,
+            sender=sender_address,
+            recipient=solution_address,
+            amount=price,
+        )
+    end
+    breeders.write(sender_address, 1)
     return (1)
 end
 
@@ -61,6 +95,13 @@ func declare_animal{pedersen_ptr : HashBuiltin*, syscall_ptr : felt*, range_chec
     alloc_locals
     # Reading caller address
     let (local sender_address) = get_caller_address()
+
+    let (is_approved) = breeders.read(sender_address)
+
+    with_attr error_message("sender_address is not a breeder"):
+        assert is_approved = 1
+    end
+
     let (local token_id) = Solution_mint(sender_address)
     declare_animal_internal(token_id=token_id, sex=sex, legs=legs, wings=wings)
     let (local cur_index) = owner_cur_index.read(sender_address)

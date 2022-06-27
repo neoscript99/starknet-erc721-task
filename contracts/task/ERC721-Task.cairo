@@ -29,6 +29,7 @@ from contracts.task.ExeSolutionBase import (
     declare_dead_animal,
     cur_token_id,
     Solution_mint,
+    Solution_init,
 )
 
 from contracts.token.ERC20.IERC20 import IERC20
@@ -53,6 +54,7 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     let (token_id) = Solution_mint(to_)
     cur_token_id.write(token_id)
     let dummy_token_address = 0x07ff0a898530b169c5fe6fed9b397a7bbd402973ce2f543965f99d6d4a4c17b8
+    Solution_init(dummy_token_address)
     dummy_token_address_storage.write(dummy_token_address)
     dummy_metadata_erc721_storage.write(
         0x02e24bd7683c01cb2e4e48148e254f2a0d44ee526cff3c703d6031a685f1700d
